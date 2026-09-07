@@ -1,0 +1,37 @@
+name: Deploy GitHub Pages
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pack static PWA
+        run: |
+          mkdir -p _site
+          for f in index.html styles.css sw.js manifest.webmanifest .nojekyll; do
+            [ -f "$f" ] && cp "$f" _site/
+            [ -f "docs/$f" ] && cp "docs/$f" _site/
+          done
+          [ -d js ] && cp -r js _site/js
+          [ -d docs/js ] && cp -r docs/js _site/js
+          [ -d assets ] && cp -r assets _site/assets
+          [ -d docs/assets ] && cp -r docs/assets _site/assets
+          ls -la _site _site/js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
