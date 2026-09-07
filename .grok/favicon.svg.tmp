@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Woord">
+  <rect width="32" height="32" rx="7" fill="#0c0d0c"/>
+  <path fill="#f2efe6" d="M 6.09 8.45 L 10.64 23.60 L 13.63 23.70 L 17.48 13.40 L 14.52 13.40 L 18.37 23.70 L 21.36 23.60 L 25.91 8.45 L 22.89 7.55 L 18.34 22.70 L 21.33 22.60 L 17.48 12.30 L 14.52 12.30 L 10.67 22.60 L 13.66 22.70 L 9.11 7.55 Z"/>
+  <!-- open-book / pulpit: two pages as a low chevron lectern -->
+  <path fill="#d8d6cc" d="M6.8 24.85 L16 27.55 L25.2 24.85 L24.15 26.05 L16 28.55 L7.85 26.05 Z"/>
+</svg>

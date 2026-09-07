@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Woord">
+  <rect width="32" height="32" rx="7" fill="#0c0d0c"/>
+  <!-- geometric W -->
+  <path d="M7.9 8.2 L12.15 23.1 L16 13.2 L19.85 23.1 L24.1 8.2"
+        fill="none" stroke="#f2efe6" stroke-width="2.7"
+        stroke-linejoin="miter" stroke-miterlimit="2.4" stroke-linecap="butt"/>
+  <!-- pulpit rail + tapered body -->
+  <rect x="7.6" y="25.15" width="16.8" height="1.15" rx="0.35" fill="#d8d6cc"/>
+  <path fill="#9a9b94" d="M10.4 26.55h11.2l-1.25 1.85H11.65z"/>
+</svg>

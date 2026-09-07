@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <title>Church Live Translator</title>
+  <link rel="manifest" href="manifest.webmanifest?v=4.1" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css?v=4.1" />
+</head>
+<body>
+  <main class="app-shell" id="appShell">
+    <section class="top-panel" id="topPanel">
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">Church Live Translator · v4.1 MVP</p>
+          <h1>Afrikaans ↔ English live captions</h1>
+        </div>
+        <button id="serviceModeBtn" class="secondary">Church Service Mode</button>
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <h2>1. Translation test</h2>
+          <p class="hint">Start here. This confirms translation works before testing the microphone.</p>
+          <label for="sourceLang">Direction</label>
+          <select id="sourceLang">
+            <option value="auto">Auto detect</option>
+            <option value="af">Afrikaans → English</option>
+            <option value="en">English → Afrikaans</option>
+          </select>
+          <label for="manualInput">Type or paste text</label>
+          <textarea id="manualInput" rows="4" placeholder="Example: Laat ons bid"></textarea>
+          <div class="button-row">
+            <button id="translateBtn">Translate typed text</button>
+            <button id="sampleAfBtn" class="secondary">Test Afrikaans</button>
+            <button id="sampleEnBtn" class="secondary">Test English</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>2. Microphone test</h2>
+          <p class="hint">Best supported in Chrome or Edge on Windows/Android. Safari support is limited.</p>
+          <div class="button-row">
+            <button id="micCheckBtn" class="secondary">Check microphone</button>
+            <button id="startBtn">Start listening</button>
+            <button id="stopBtn" class="danger" disabled>Stop</button>
+          </div>
+          <label for="speechLang">Speech recognition language</label>
+          <select id="speechLang">
+            <option value="af-ZA">Afrikaans (South Africa)</option>
+            <option value="en-ZA">English (South Africa)</option>
+            <option value="en-US">English (US fallback)</option>
+          </select>
+          <p id="speechTranscript" class="transcript">Transcript will appear here during microphone tests.</p>
+        </section>
+      </div>
+
+      <section class="card diagnostics">
+        <h2>3. Engine diagnostics</h2>
+        <div class="status-grid">
+          <div><strong>Browser speech:</strong> <span id="speechSupport">Checking…</span></div>
+          <div><strong>Microphone:</strong> <span id="micStatus">Not tested</span></div>
+          <div><strong>Translation engine:</strong> <span id="translationEngine">Local phrases + public fallback</span></div>
+          <div><strong>PWA/offline shell:</strong> <span id="pwaStatus">Checking…</span></div>
+          <div><strong>Display mode:</strong> <span id="displayMode">Normal</span></div>
+          <div><strong>Last action:</strong> <span id="lastAction">Ready</span></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="stage" id="stage">
+      <div class="stage-content">
+        <p class="muted">Use this area for Bible verses, sermon notes, OBS/browser source, or a blank projection background.</p>
+        <h2>Projected content can stay above</h2>
+        <p>The translated caption remains fixed at the bottom and is limited to three lines.</p>
+      </div>
+    </section>
+  </main>
+
+  <aside class="caption-bar" id="captionBar" aria-live="polite">
+    <button id="exitServiceModeBtn" class="exit-service" type="button" aria-label="Exit church service mode">Exit</button>
+    <div class="caption-meta" id="captionMeta">Ready</div>
+    <div class="caption-text" id="captionText">Translation will appear here</div>
+  </aside>
+
+  <script src="app.js?v=4.1"></script>
+</body>
+</html>

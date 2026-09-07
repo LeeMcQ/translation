@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Woord">
+  <rect width="32" height="32" rx="7" fill="#0c0d0c"/>
+  <!-- Geometric W -->
+  <path fill="#f2efe6" d="M7.05 8.35h3.5l2.7 11.15L16 12.2l2.75 7.3 2.7-11.15h3.5L20.6 24.05h-3.45L16 19.35l-1.15 4.7H11.4Z"/>
+  <!-- Pulpit rail + open-book lectern taper -->
+  <rect x="8" y="25.25" width="16" height="1.2" rx="0.25" fill="#d8d6cc"/>
+  <path fill="#9a9b94" d="M11.15 26.7h9.7l-1.2 1.55h-7.3Z"/>
+</svg>

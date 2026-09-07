@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Woord",
+      "hasCanvas": false,
+      "bodyTextLen": 1151,
+      "bodyTextHash": "a736b27a802a4906458db0ee1f71ca9105c62acf9d21070f9685d7182b6cf19b",
+      "bodyTextPrefix": "Woord How it works Glossary Host SABBATH LIVE TRANSLATION The pu",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Woord",
+      "hasCanvas": false,
+      "bodyTextLen": 1129,
+      "bodyTextHash": "0a5c5940a5aa1f0cbd281ed1ec5b389ae0d283b4b6abb0c873ea430cff73d232",
+      "bodyTextPrefix": "Woord Host SABBATH LIVE TRANSLATION The pulpit in Afrikaans. The",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
