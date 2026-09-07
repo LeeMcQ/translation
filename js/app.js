@@ -9,10 +9,11 @@ const root = document.getElementById("app");
 const state = {
   route: parseRoute(),
   host: null,
+  pewBus: null,
 };
 
 window.addEventListener("hashchange", () => {
-  teardownHost();
+  teardown();
   state.route = parseRoute();
   render();
 });
@@ -30,7 +31,7 @@ function parseRoute() {
   return { name: "home" };
 }
 
-function teardownHost() {
+function teardown() {
   if (state.host?.rec) {
     try {
       state.host.rec.stop();
@@ -41,6 +42,8 @@ function teardownHost() {
   state.host?.bus?.close();
   state.host?.demoTimer && clearInterval(state.host.demoTimer);
   state.host = null;
+  state.pewBus?.close();
+  state.pewBus = null;
 }
 
 function render() {
@@ -71,7 +74,7 @@ function shell(body, opts = {}) {
       </nav>
     </header>
     ${body}
-    ${opts.footer !== false ? `<footer class="foot">Source language is always shown. Scripture is pinned, not invented.</footer>` : ""}
+    ${opts.footer !== false ? `<footer class="foot">No server. Source language is always shown. Scripture is pinned, not invented.</footer>` : ""}
   `;
 }
 
@@ -80,7 +83,7 @@ function renderHome() {
     <section class="hero">
       <p class="kicker">Seventh-day Adventist · live service captions</p>
       <h1>Hear the Word in the language of your heart — without losing the Afrikaans.</h1>
-      <p class="lead">The host phone listens to the pulpit. Pew phones join with a 6-letter code. Every line keeps the original Afrikaans as the deep backup if English slips.</p>
+      <p class="lead">The host phone listens to the pulpit. Pew phones join with a 6-letter code. Every line keeps the original Afrikaans as the deep backup if English slips. Nothing is billed — liturgy, slang, and the glossary live in this page.</p>
       <div class="cta">
         <a class="btn" href="#/host">Open host console</a>
         <a class="btn ghost" href="#/join">Join a service</a>
@@ -107,14 +110,14 @@ function renderHow() {
   shell(`
     <section class="prose">
       <h1>How Woord stays accurate</h1>
-      <p>Church caption products that work (Church Cap, spf.io, OneAccord, CaptionLift) all do the same four things. Woord copies those, not the paid stack.</p>
+      <p>This copy runs entirely in the browser — no church server, no monthly bill. Church caption products that work (Church Cap, spf.io, OneAccord, CaptionLift) all do the same four things. Woord copies those, not the paid stack.</p>
       <ol>
         <li><strong>Always show the source.</strong> If English is wrong, Afrikaans is still on screen. That is the deep backup.</li>
         <li><strong>Human gate.</strong> Safe mode = host sends the line. OneAccord calls this Moderation: edit before translation leaves the desk.</li>
         <li><strong>Glossary + liturgy memory.</strong> Sabbath, remnant, sanctuary, three angels, seal — never guessed. Stock lines like “Laat ons bid” are canned.</li>
-        <li><strong>Kaaps / slang.</strong> lekker, ja-nee, eish, tannie, nou-nou — Cape pulpit English, not food or clock time.</li>
+        <li><strong>Kaaps / slang.</strong> lekker, ja-nee, eish, tannie, nou-nou — Cape pulpit English, not food or clock time. The lexicon runs before any public translator.</li>
         <li><strong>Do not MT Scripture.</strong> Detect the reference. Tell the pew to open the Bible they trust.</li>
-        <li><strong>Translate finished sentences only.</strong> Partial speech flickers and wastes quota. Google’s live-translate team masks unstable tails for the same reason.</li>
+        <li><strong>Translate finished sentences only.</strong> Partial speech flickers and wastes quota.</li>
         <li><strong>Pew can flag a line.</strong> Host sees it and can rewrite.</li>
         <li><strong>Projector fallback.</strong> If phones cannot sync, the host screen itself is the foyer board.</li>
       </ol>
@@ -122,7 +125,7 @@ function renderHow() {
       <ol>
         <li>Host phone, Chrome, church Wi-Fi, sit near the pulpit or an aux feed.</li>
         <li>Start in <em>Safe</em> until you have heard three good lines.</li>
-        <li>Put the QR on the foyer screen.</li>
+        <li>Put the QR on the foyer screen. Same-phone pew view also works.</li>
         <li>If translation fails, leave Safe mode on and type the line.</li>
       </ol>
     </section>
@@ -220,7 +223,7 @@ function renderHost() {
     state.host.bus.attachPeer().then((r) => {
       state.host.peerOk = r.peerOk;
       const el = document.getElementById("peerState");
-      if (el) el.textContent = r.peerOk ? "Pew link: PeerJS ready" : "Pew link: this device / projector";
+      if (el) el.textContent = r.peerOk ? "Pew link: phones can join" : "Pew link: this device / projector";
     });
     state.host.bus.on((msg) => {
       if (msg.type === "flag") {
@@ -239,7 +242,10 @@ function renderHost() {
         <div class="code-big">${h.code}</div>
         <div class="hash">${h.tag}</div>
         <canvas id="qr" width="180" height="180"></canvas>
-        <a class="pew-link" href="${h.url}" target="_blank" rel="noopener">Open pew view</a>
+        <div class="cta stack">
+          <a class="pew-link" href="${h.url}" target="_blank" rel="noopener">Open pew view</a>
+          <button class="btn ghost small" id="copyCode" type="button">Copy code</button>
+        </div>
         <p class="tiny" id="peerState">Connecting pew link…</p>
       </aside>
       <div class="console">
@@ -250,12 +256,12 @@ function renderHost() {
               <option value="live" ${h.mode === "live" ? "selected" : ""}>Live — auto send finals</option>
             </select>
           </label>
-          <button class="btn" id="micBtn">${h.listening ? "Stop mic" : "Start mic af-ZA"}</button>
+          <button class="btn ${h.listening ? "live-mic" : ""}" id="micBtn">${h.listening ? "Stop mic" : "Start mic af-ZA"}</button>
           <button class="btn ghost" id="micCheck">Check mic</button>
           <button class="btn ghost" id="demoBtn">Demo sermon</button>
           <span class="pill">Flags <b id="flagCount">${h.flags}</b></span>
         </div>
-        <p class="tiny" id="speechHint">${speechSupported() ? "Chrome / Edge required for Afrikaans speech." : "Speech API missing. Type lines instead."}</p>
+        <p class="tiny" id="speechHint">${speechSupported() ? "Chrome / Edge required for Afrikaans speech. Mic keeps listening through pauses." : "Speech API missing. Type lines instead."}</p>
         <div class="type-row">
           <input id="typed" class="input" placeholder="Type Afrikaans if the mic misses a line…" />
           <button class="btn" id="sendTyped">Translate</button>
@@ -269,6 +275,14 @@ function renderHost() {
   drawQr("qr", h.url);
   document.getElementById("modeSel").onchange = (e) => {
     h.mode = e.target.value;
+  };
+  document.getElementById("copyCode").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(h.code + "\n" + h.url);
+      toast("Code copied");
+    } catch {
+      toast(h.code);
+    }
   };
   document.getElementById("micCheck").onclick = async () => {
     const r = await checkMic();
@@ -400,19 +414,29 @@ function toggleMic() {
       /* */
     }
     h.listening = false;
-    document.getElementById("micBtn").textContent = "Start mic af-ZA";
+    const b = document.getElementById("micBtn");
+    if (b) {
+      b.textContent = "Start mic af-ZA";
+      b.classList.remove("live-mic");
+    }
     return;
   }
   const rec = createAfrikaansRecognizer({
     onStart() {
       h.listening = true;
       const b = document.getElementById("micBtn");
-      if (b) b.textContent = "Stop mic";
+      if (b) {
+        b.textContent = "Stop mic";
+        b.classList.add("live-mic");
+      }
     },
     onEnd() {
       h.listening = false;
       const b = document.getElementById("micBtn");
-      if (b) b.textContent = "Start mic af-ZA";
+      if (b) {
+        b.textContent = "Start mic af-ZA";
+        b.classList.remove("live-mic");
+      }
     },
     onError(err) {
       toast("Speech: " + err);
@@ -473,11 +497,13 @@ function runDemo() {
 function renderPew(code) {
   const lines = [];
   const bus = createRoomBus(code, "pew");
+  state.pewBus = bus;
   let font = Number(localStorage.getItem("woord-font") || 22);
   shell(`
     <section class="pew">
       <div class="pew-top">
         <span class="code-big sm">${esc(code)}</span>
+        <p class="tiny" id="pewState">Linking to host…</p>
         <label>Text <input id="font" type="range" min="16" max="42" value="${font}" /></label>
       </div>
       <div class="pew-board" id="pewBoard" style="font-size:${font}px">
@@ -486,11 +512,22 @@ function renderPew(code) {
     </section>
   `, { footer: false });
   lockScreen();
-  bus.attachPeer();
+  const setState = (ok, extra) => {
+    const el = document.getElementById("pewState");
+    if (!el) return;
+    el.textContent = ok
+      ? "Linked — captions will appear here"
+      : extra || "Waiting — same phone works; other phones need church Wi-Fi";
+  };
   bus.on((msg) => {
+    if (msg.type === "status") {
+      setState(!!msg.peerOk, msg.reason === "broker" ? "Broker busy — use this phone as the pew, or the host as a projector" : "");
+      return;
+    }
     if (msg.type === "sync" && Array.isArray(msg.lines)) {
       lines.splice(0, lines.length, ...msg.lines);
       paintPew(lines);
+      setState(true);
       return;
     }
     if (msg.type !== "line") return;
@@ -498,7 +535,9 @@ function renderPew(code) {
     if (i >= 0) lines[i] = msg.line;
     else lines.push(msg.line);
     paintPew(lines);
+    setState(true);
   });
+  bus.attachPeer();
   document.getElementById("font").oninput = (e) => {
     font = Number(e.target.value);
     localStorage.setItem("woord-font", String(font));
@@ -534,7 +573,7 @@ function paintPew(lines) {
 function drawQr(id, text) {
   const canvas = document.getElementById(id);
   if (!canvas || !window.QRCode) return;
-  window.QRCode.toCanvas(canvas, text, { width: 180, margin: 1, color: { dark: "#e8dcc8", light: "#16131e" } });
+  window.QRCode.toCanvas(canvas, text, { width: 180, margin: 1, color: { dark: "#d8d6cc", light: "#0c0d0c" } });
 }
 
 function toast(msg) {
@@ -547,7 +586,7 @@ function toast(msg) {
 
 function esc(s) {
   return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">");
 }

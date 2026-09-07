@@ -58,7 +58,10 @@ export function createRoomBus(code, role) {
   }
 
   async function attachPeer() {
-    if (!window.Peer) return { peerOk: false };
+    if (!window.Peer) {
+      emit({ type: "status", peerOk: false, reason: "no-peerjs" });
+      return { peerOk: false };
+    }
     try {
       const id = "woord" + code.toLowerCase();
       peer = role === "host" ? new window.Peer(id) : new window.Peer();
@@ -82,15 +85,18 @@ export function createRoomBus(code, role) {
             } catch {
               /* */
             }
+            emit({ type: "status", peerOk: true, pews: conns.length });
           });
           conn.on("data", (msg) => handle(msg));
           conn.on("close", () => {
             conns = conns.filter((c) => c !== conn);
+            emit({ type: "status", peerOk: true, pews: conns.length });
           });
         });
       } else {
         const conn = peer.connect(id);
         conn.on("data", (msg) => emit(msg));
+        conn.on("close", () => emit({ type: "status", peerOk: false, reason: "closed" }));
         await new Promise((resolve, reject) => {
           const t = setTimeout(() => reject(new Error("pew-timeout")), 6000);
           conn.on("open", () => {
@@ -102,9 +108,11 @@ export function createRoomBus(code, role) {
         conns.push(conn);
         send({ type: "hello" });
       }
+      emit({ type: "status", peerOk: true });
       return { peerOk: true };
     } catch {
       if (role === "pew") send({ type: "hello" });
+      emit({ type: "status", peerOk: false, reason: "broker" });
       return { peerOk: false };
     }
   }

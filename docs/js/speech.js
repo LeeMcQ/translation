@@ -2,6 +2,10 @@ export function speechSupported() {
   return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 }
 
+/**
+ * Chrome drops the recognizer after a pause. For a sermon we keep restarting
+ * until the host taps Stop.
+ */
 export function createAfrikaansRecognizer({ onInterim, onFinal, onError, onStart, onEnd }) {
   const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Ctor) return null;
@@ -11,13 +15,32 @@ export function createAfrikaansRecognizer({ onInterim, onFinal, onError, onStart
   rec.interimResults = true;
   rec.maxAlternatives = 1;
 
+  let wanted = false;
+
   rec.onstart = () => onStart?.();
-  rec.onend = () => onEnd?.();
-  rec.onerror = (e) => onError?.(e.error || "speech");
+  rec.onend = () => {
+    if (wanted) {
+      setTimeout(() => {
+        if (!wanted) return;
+        try {
+          rec.start();
+        } catch {
+          /* already started */
+        }
+      }, 180);
+      return;
+    }
+    onEnd?.();
+  };
+  rec.onerror = (e) => {
+    const err = e.error || "speech";
+    if (err === "no-speech" || err === "aborted") return;
+    onError?.(err);
+  };
 
   rec.onresult = (event) => {
     let interim = "";
-    let finals = [];
+    const finals = [];
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const piece = event.results[i][0].transcript;
       if (event.results[i].isFinal) finals.push(piece);
@@ -30,7 +53,20 @@ export function createAfrikaansRecognizer({ onInterim, onFinal, onError, onStart
     }
   };
 
-  return rec;
+  return {
+    start() {
+      wanted = true;
+      rec.start();
+    },
+    stop() {
+      wanted = false;
+      try {
+        rec.stop();
+      } catch {
+        /* */
+      }
+    },
+  };
 }
 
 export async function checkMic() {

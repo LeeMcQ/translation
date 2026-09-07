@@ -1,12 +1,15 @@
 {
   "name": "Woord live captions",
   "short_name": "Woord",
-  "start_url": "./index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0c0d0c",
   "theme_color": "#0c0d0c",
-  "description": "Afrikaans pulpit captions with English pew translation. Source language is the backup.",
+  "description": "Afrikaans pulpit captions with English pew translation. Runs in the browser. Source language is the backup.",
   "icons": [
-    { "src": "./assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "./assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

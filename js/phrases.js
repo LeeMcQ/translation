@@ -4,6 +4,7 @@ export const PHRASES = [
   ["Laat ons saam bid", "Let us pray together"],
   ["Amen", "Amen"],
   ["Halleluja", "Hallelujah"],
+  ["Haleluja", "Hallelujah"],
   ["Prys die Here", "Praise the Lord"],
   ["Loof die Here", "Praise the Lord"],
   ["Goeiemôre gemeente", "Good morning church"],
@@ -41,6 +42,8 @@ export const PHRASES = [
   ["Die vrede van die Here", "The peace of the Lord"],
   ["Gaan in vrede", "Go in peace"],
   ["Die Here seën jou en Hy behoed jou", "The Lord bless you and keep you"],
+  ["Die Here laat Sy aangesig oor jou skyn", "The Lord make His face shine upon you"],
+  ["Die Here verhef Sy aangesig oor jou en gee jou vrede", "The Lord lift up His countenance upon you and give you peace"],
   ["Ja-nee gemeente", "Well then church"],
   ["Kom vorentoe", "Come forward"],
 ];

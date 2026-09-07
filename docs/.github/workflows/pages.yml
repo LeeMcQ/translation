@@ -20,7 +20,7 @@ jobs:
       - name: Pack static PWA
         run: |
           mkdir -p _site
-          for f in index.html styles.css sw.js manifest.webmanifest .nojekyll 404.html og.jpg; do
+          for f in index.html styles.css sw.js manifest.webmanifest .nojekyll; do
             [ -f "$f" ] && cp "$f" _site/
             [ -f "docs/$f" ] && cp "docs/$f" _site/
           done
@@ -28,7 +28,7 @@ jobs:
           [ -d docs/js ] && cp -r docs/js _site/js
           [ -d assets ] && cp -r assets _site/assets
           [ -d docs/assets ] && cp -r docs/assets _site/assets
-          ls -la _site _site/js _site/assets
+          ls -la _site _site/js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

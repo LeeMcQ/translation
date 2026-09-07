@@ -1,9 +1,10 @@
 import { applyGlossaryAf, pinEnglishTerms, GLOSSARY } from "./glossary.js";
 import { lookupPhrase, PHRASES } from "./phrases.js";
 import { detectScripture, scriptureBanner } from "./scripture.js";
-import { lexiconTranslate, applyPairs } from "./slang.js";
+import { lexiconTranslate, applyPairs, pinSlang } from "./slang.js";
+import { detectFoul } from "./filter.js";
 
-const CACHE_KEY = "woord-mt-cache-v2";
+const CACHE_KEY = "woord-mt-cache-v3";
 
 function loadCache() {
   try {
@@ -38,91 +39,125 @@ function localEnglish(source) {
   return out.replace(/\s+/g, " ").trim();
 }
 
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Share of Afrikaans content words that were replaced in the local pass. */
+export function wordCoverage(source, local) {
+  const src = source
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^\p{L}\p{N}'-]/gu, ""))
+    .filter((w) => w.length > 2);
+  if (!src.length) return 0;
+  let kept = 0;
+  for (const w of src) {
+    const re = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(w)}(?![\\p{L}\\p{N}])`, "iu");
+    if (re.test(local)) kept += 1;
+  }
+  return 1 - kept / src.length;
+}
+
+function finish(source, en, engine, confidence, scripture, warning) {
+  let out = pinEnglishTerms(en || "", source);
+  out = pinSlang(out, source);
+  return {
+    af: source,
+    en: out,
+    engine,
+    confidence,
+    scripture,
+    warning,
+  };
+}
+
 export async function translateUtterance(rawAf, opts = {}) {
   const source = applyGlossaryAf((rawAf || "").trim());
   if (!source) {
     return { af: "", en: "", engine: "empty", confidence: 0, scripture: [], warning: null };
   }
 
+  const foul = detectFoul(source);
   const scripture = detectScripture(source);
   const banner = scriptureBanner(scripture);
-  const local = localEnglish(source);
+
+  if (foul.blocked) {
+    return finish(
+      source,
+      "",
+      "blocked",
+      0,
+      scripture,
+      "Held back — not church-appropriate. Drop or retype.",
+    );
+  }
 
   const exact = lookupPhrase(source);
   if (exact) {
-    return {
-      af: source,
-      en: exact,
-      engine: "liturgy",
-      confidence: 1,
-      scripture,
-      warning: banner ? banner.en : null,
-    };
+    return finish(source, exact, "liturgy", 1, scripture, banner ? banner.en : null);
   }
 
   if (banner && source.split(/\s+/).length >= 18) {
-    return {
-      af: source,
-      en: "",
-      engine: "scripture",
-      confidence: 1,
-      scripture,
-      warning: banner.en,
-    };
+    return finish(source, "", "scripture", 1, scripture, banner.en);
   }
 
   const cache = loadCache();
   const ck = cacheKey(source);
   if (cache[ck]) {
-    return {
-      af: source,
-      en: pinEnglishTerms(cache[ck], source),
-      engine: "cache",
-      confidence: 0.92,
-      scripture,
-      warning: banner ? banner.en : null,
-    };
+    return finish(source, cache[ck], "cache", 0.92, scripture, banner ? banner.en : null);
   }
 
+  const local = localEnglish(source);
   const localUseful = local && local.toLowerCase() !== source.toLowerCase();
+  const cov = localUseful ? wordCoverage(source, local) : 0;
+  const preferLocal = cov >= 0.45;
 
-  if (opts.offlineOnly) {
-    return {
-      af: source,
-      en: localUseful ? local : "",
-      engine: localUseful ? "lexicon" : "source-only",
-      confidence: localUseful ? 0.6 : 0.2,
+  if (opts.offlineOnly || preferLocal) {
+    return finish(
+      source,
+      localUseful ? local : "",
+      localUseful ? "lexicon" : "source-only",
+      localUseful ? Math.max(0.6, cov) : 0.2,
       scripture,
-      warning: banner ? banner.en : localUseful ? null : "Translation offline — Afrikaans source is the backup.",
-    };
+      banner
+        ? banner.en
+        : localUseful
+          ? null
+          : "Translation offline — Afrikaans source is the backup.",
+    );
   }
 
   try {
-    const en = await myMemory(source);
-    const pinned = pinEnglishTerms(en, source);
+    const mt = await myMemory(source);
+    const pinned = pinSlang(pinEnglishTerms(mt, source), source);
+    const mtCov = wordCoverage(source, pinned);
+    if (localUseful && cov > mtCov + 0.08) {
+      return finish(source, local, "lexicon", Math.max(0.6, cov), scripture, banner ? banner.en : null);
+    }
     cache[ck] = pinned;
     saveCache(cache);
-    return {
-      af: source,
-      en: pinned,
-      engine: "mymemory",
-      confidence: pinned ? 0.72 : 0.3,
+    return finish(
+      source,
+      pinned,
+      "mymemory",
+      pinned ? 0.72 : 0.3,
       scripture,
-      warning: banner ? banner.en : null,
-    };
+      banner ? banner.en : null,
+    );
   } catch {
-    return {
-      af: source,
-      en: localUseful ? local : "",
-      engine: localUseful ? "lexicon" : "source-only",
-      confidence: localUseful ? 0.55 : 0.2,
+    return finish(
+      source,
+      localUseful ? local : "",
+      localUseful ? "lexicon" : "source-only",
+      localUseful ? 0.55 : 0.2,
       scripture,
-      warning: banner
+      banner
         ? banner.en
         : localUseful
           ? null
           : "Translator unavailable. Read the Afrikaans line — that text is trustworthy.",
-    };
+    );
   }
 }
 
@@ -146,8 +181,9 @@ async function myMemory(q) {
 }
 
 export function looksRisky(result) {
+  if (!result) return true;
   if (!result.en) return true;
-  if (result.engine === "source-only") return true;
+  if (result.engine === "source-only" || result.engine === "blocked") return true;
   if (result.confidence < 0.55) return true;
   if (result.scripture.length) return true;
   if (result.af.split(/\s+/).length >= 18 && result.engine === "mymemory") return true;
